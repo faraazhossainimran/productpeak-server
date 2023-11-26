@@ -28,13 +28,23 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const productCollection = client.db("productPeakDb").collection("products")
-// featured products
+    // get featured products
     app.get('/products/featured', async(req, res)=> {
         const query = {productStatus: "featured"}
         const result = await productCollection.find(query).toArray()
         res.send(result)
     })
-
+    // get treanding products
+    app.get('/products/trending', async(req, res)=> {
+        const result = await productCollection.find().sort({voteCount: -1}).limit(6).toArray()
+        res.send(result)
+    })
+    // get accepted products
+    app.get('/products', async(req, res)=> {
+        const query = {productChecked: "yes"}
+        const result = await productCollection.find(query).toArray()
+        res.send(result)
+    })
 
 
 
