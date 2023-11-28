@@ -69,6 +69,7 @@ async function run() {
         productChecked: productInfo.productChecked,
         productOwnerEmail: productInfo.productOwnerEmail,
         productOwnerImage: productInfo.productOwnerImage,
+        voteCount: productInfo.voteCount
       }
       const result = await productCollection.insertOne(doc)
       res.send(result)
@@ -105,6 +106,15 @@ async function run() {
       const result = await userCollection.insertOne(doc)
       res.send(result)
     })
+    // admin related api 
+    app.get('/dashboard/myProducts/:email', async(req, res)=> {
+      const email = req.params.email;
+      const query = {productOwnerEmail: email}
+      const result = await productCollection.find(query).toArray()
+      res.send(result)
+    })
+    // delete products from my product page 
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
