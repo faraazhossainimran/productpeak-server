@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const productCollection = client.db("productPeakDb").collection("products");
     const userCollection = client.db("productPeakDb").collection("users");
     // get featured products
@@ -111,10 +111,15 @@ async function run() {
       const query = {userEmail: email}
       const user = await userCollection.findOne(query);
       let admin = false;
-      if(user){
-        admin = user?.role === 'admin'
+      let modarator = false;
+      let productOwner = false;
+      if (user) {
+        admin = user.role === 'admin';
+        modarator = user.role === 'modarator';
+      } else {
+        productOwner = true;
       }
-      res.send({admin})
+      res.send({admin, modarator, productOwner})
     })
     // admin related api 
     app.get('/dashboard/myProducts/:email', async(req, res)=> {
@@ -128,6 +133,12 @@ async function run() {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
       const result = await productCollection.deleteOne(query)
+      res.send(result)
+    })
+    // modarator related api
+    app.get('/dashboard/queueProducts', async(req, res) => {
+      const query = {productChecked: 'no'}
+      const result = await productCollection.find(query).toArray()
       res.send(result)
     })
     // Send a ping to confirm a successful connection
