@@ -106,6 +106,16 @@ async function run() {
       const result = await userCollection.insertOne(doc)
       res.send(result)
     })
+    app.get('/user/:email', async(req, res)=> {
+      const email = req.params.email;
+      const query = {userEmail: email}
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if(user){
+        admin = user?.role === 'admin'
+      }
+      res.send({admin})
+    })
     // admin related api 
     app.get('/dashboard/myProducts/:email', async(req, res)=> {
       const email = req.params.email;
@@ -114,7 +124,12 @@ async function run() {
       res.send(result)
     })
     // delete products from my product page 
-
+    app.delete('/dashboard/myProducts/:id', async(req, res)=> {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await productCollection.deleteOne(query)
+      res.send(result)
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
