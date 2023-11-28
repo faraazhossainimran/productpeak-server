@@ -37,8 +37,9 @@ async function run() {
     });
     // get treanding products
     app.get("/products/trending", async (req, res) => {
+      const query = {productChecked: "yes"}
       const result = await productCollection
-        .find()
+        .find(query)
         .sort({ voteCount: -1 })
         .limit(6)
         .toArray();
@@ -57,6 +58,21 @@ async function run() {
       const result = await productCollection.findOne(query);
       res.send(result);
     });
+    // post a single product 
+    app.post('/products', async(req, res) => {
+      const productInfo = req.body;
+      const doc = {
+        productName: productInfo.productName,
+        productImage: productInfo.productImage,
+        description: productInfo.description,
+        productOwner: productInfo.productOwner,
+        productChecked: productInfo.productChecked,
+        productOwnerEmail: productInfo.productOwnerEmail,
+        productOwnerImage: productInfo.productOwnerImage,
+      }
+      const result = await productCollection.insertOne(doc)
+      res.send(result)
+    })
 
     // review related endpoint
     app.patch("/product/review/:id", async (req, res) => {
