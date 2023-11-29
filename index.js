@@ -128,6 +128,12 @@ async function run() {
       const result = await productCollection.find(query).toArray()
       res.send(result)
     })
+    app.get('/dashboard/prodcutReviewQueue/:id', async(req, res)=> {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await productCollection.findOne(query)
+      res.send(result)
+    })
     // delete products from my product page 
     app.delete('/dashboard/myProducts/:id', async(req, res)=> {
       const id = req.params.id;
