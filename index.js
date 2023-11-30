@@ -128,10 +128,22 @@ async function run() {
       const result = await productCollection.find(query).toArray()
       res.send(result)
     })
-    app.get('/dashboard/prodcutReviewQueue/:id', async(req, res)=> {
+    // product queue in the dashboard api
+    app.get('/dashboard/productReviewQueue/:id', async(req, res)=> {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
       const result = await productCollection.findOne(query)
+      res.send(result)
+    })
+    app.patch('/dashboard/productReviewQueue/:id', async(req, res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+        $set: {
+          productChecked: "yes"
+        }
+      }
+      const result = await productCollection.updateOne(filter, updateDoc)
       res.send(result)
     })
     // delete products from my product page 
@@ -145,6 +157,11 @@ async function run() {
     app.get('/dashboard/queueProducts', async(req, res) => {
       const query = {productChecked: 'no'}
       const result = await productCollection.find(query).toArray()
+      res.send(result)
+    })
+    // manage Users api
+    app.get('/dashboard/manageUsers', async(req, res)=> {
+      const result = await userCollection.find().toArray()
       res.send(result)
     })
     // Send a ping to confirm a successful connection
