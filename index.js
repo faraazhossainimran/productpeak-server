@@ -37,7 +37,7 @@ async function run() {
     });
     // get treanding products
     app.get("/products/trending", async (req, res) => {
-      const query = {productChecked: "yes"}
+      const query = { productChecked: "yes" };
       const result = await productCollection
         .find(query)
         .sort({ voteCount: -1 })
@@ -58,8 +58,8 @@ async function run() {
       const result = await productCollection.findOne(query);
       res.send(result);
     });
-    // post a single product 
-    app.post('/products', async(req, res) => {
+    // post a single product
+    app.post("/products", async (req, res) => {
       const productInfo = req.body;
       const doc = {
         productName: productInfo.productName,
@@ -69,11 +69,11 @@ async function run() {
         productChecked: productInfo.productChecked,
         productOwnerEmail: productInfo.productOwnerEmail,
         productOwnerImage: productInfo.productOwnerImage,
-        voteCount: productInfo.voteCount
-      }
-      const result = await productCollection.insertOne(doc)
-      res.send(result)
-    })
+        voteCount: productInfo.voteCount,
+      };
+      const result = await productCollection.insertOne(doc);
+      res.send(result);
+    });
 
     // review related endpoint
     app.patch("/product/review/:id", async (req, res) => {
@@ -94,76 +94,124 @@ async function run() {
       const result = await productCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
+    // upvote related endpoint
+    app.patch("/product/upVote/:id", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        return res.status(401).json({ error: "user not logged in" });
+      }
+      const id = req.params.id;
+      console.log(email, id);
+      const filter = {
+        _id: new ObjectId(id),
+      };
+      const updateDoc = {
+        $push: {
+          upVote: {
+            upVotedEmail: email,
+          },
+        },
+      };
+      const result = await productCollection.updateMany(filter, updateDoc);
+      res.send(result);
+    });
     // users related endpoints
-    app.post('/user', async(req, res)=> {
+    app.post("/user", async (req, res) => {
       const userInfo = req.body;
       const doc = {
-        userName : userInfo.userName, 
+        userName: userInfo.userName,
         userEmail: userInfo.userEmail,
-        userPhoto: userInfo.userPhoto
-
-      }
-      const result = await userCollection.insertOne(doc)
-      res.send(result)
-    })
-    app.get('/user/:email', async(req, res)=> {
+        userPhoto: userInfo.userPhoto,
+      };
+      const result = await userCollection.insertOne(doc);
+      res.send(result);
+    });
+    app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
-      const query = {userEmail: email}
+      const query = { userEmail: email };
       const user = await userCollection.findOne(query);
       let admin = false;
       let modarator = false;
       let productOwner = false;
       if (user) {
-        admin = user.role === 'admin';
-        modarator = user.role === 'modarator';
+        admin = user.role === "admin";
+        modarator = user.role === "modarator";
       } else {
         productOwner = true;
       }
-      res.send({admin, modarator, productOwner})
-    })
-    // admin related api 
-    app.get('/dashboard/myProducts/:email', async(req, res)=> {
+      res.send({ admin, modarator, productOwner });
+    });
+    // admin related api
+    app.get("/dashboard/myProducts/:email", async (req, res) => {
       const email = req.params.email;
-      const query = {productOwnerEmail: email}
-      const result = await productCollection.find(query).toArray()
-      res.send(result)
-    })
+      const query = { productOwnerEmail: email };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
     // product queue in the dashboard api
-    app.get('/dashboard/productReviewQueue/:id', async(req, res)=> {
+    app.get("/dashboard/productReviewQueue/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await productCollection.findOne(query)
-      res.send(result)
-    })
-    app.patch('/dashboard/productReviewQueue/:id', async(req, res) => {
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
+    app.patch("/dashboard/productReviewQueue/:id", async (req, res) => {
       const id = req.params.id;
-      const filter = {_id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          productChecked: "yes"
-        }
-      }
-      const result = await productCollection.updateOne(filter, updateDoc)
-      res.send(result)
-    })
-    // delete products from my product page 
-    app.delete('/dashboard/myProducts/:id', async(req, res)=> {
+          productChecked: "yes",
+        },
+      };
+      const result = await productCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    // delete products from my product page
+    app.delete("/dashboard/myProducts/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await productCollection.deleteOne(query)
-      res.send(result)
-    })
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
+      res.send(result);
+    });
     // modarator related api
-    app.get('/dashboard/queueProducts', async(req, res) => {
-      const query = {productChecked: 'no'}
-      const result = await productCollection.find(query).toArray()
-      res.send(result)
-    })
+    app.get("/dashboard/queueProducts", async (req, res) => {
+      const query = { productChecked: "no" };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
     // manage Users api
-    app.get('/dashboard/manageUsers', async(req, res)=> {
-      const result = await userCollection.find().toArray()
-      res.send(result)
-    })
+    app.get("/dashboard/manageUsers", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+    // upadte user role
+    app.patch(`/dashboard/manageUsers/:id`, async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "modarator",
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      console.log(result);
+      res.send(result);
+    });
+    // udpate user role to admin
+    app.patch(`/dashboard/manageUsers/admin/:id`, async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      console.log(result);
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
