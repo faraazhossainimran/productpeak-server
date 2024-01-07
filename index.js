@@ -5,12 +5,12 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 //  middleware
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:5173", "https://steady-kelpie-61d494.netlify.app"],
+  credentials: true,
+}));
 app.use(express.json());
 // featured products
-
-// faraazhossainimran
-// 56W2FLKwCdsxqbP5
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ubvpwhw.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -29,6 +29,7 @@ async function run() {
     // await client.connect();
     const productCollection = client.db("productPeakDb").collection("products");
     const userCollection = client.db("productPeakDb").collection("users");
+    const discussionCollection = client.db("productPeakDb").collection("discussion");
     // get featured products
     app.get("/products/featured", async (req, res) => {
       const query = { productStatus: "featured" };
@@ -61,6 +62,7 @@ async function run() {
     // post a single product
     app.post("/products", async (req, res) => {
       const productInfo = req.body;
+      console.log(productInfo);
       const doc = {
         productName: productInfo.productName,
         productImage: productInfo.productImage,
@@ -70,8 +72,10 @@ async function run() {
         productOwnerEmail: productInfo.productOwnerEmail,
         productOwnerImage: productInfo.productOwnerImage,
         voteCount: productInfo.voteCount,
+        tags: productInfo.tags
       };
       const result = await productCollection.insertOne(doc);
+      console.log(result);
       res.send(result);
     });
 
@@ -96,10 +100,10 @@ async function run() {
     });
     // upvote related endpoint
     app.patch("/product/upVote/:id", async (req, res) => {
-      const email = req.query.email;
-      if (!email) {
-        return res.status(401).json({ error: "user not logged in" });
-      }
+      const email = req.body;
+      // if (!email) {
+      //   return res.status(401).json({ error: "user not logged in" });
+      // }
       const id = req.params.id;
       console.log(email, id);
       const filter = {
@@ -112,9 +116,29 @@ async function run() {
           },
         },
       };
-      const result = await productCollection.updateMany(filter, updateDoc);
+      const result = await productCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+    // discussion related endpoints
+    // post a discussion
+    app.post("/discussion", async(req, res) => {
+      const discussionInfo = req.body;
+      const doc = {
+        name: discussionInfo.displayName,
+        email: discussionInfo.email,
+        question: discussionInfo.question,
+        photo: discussionInfo.photo
+      }
+      const result = await discussionCollection.insertOne(doc);
+      res.send(result)
+    })
+    // get discussion
+    app.get("/discussion", async(req, res)=> {
+      const result = await discussionCollection.find().toArray()
+      res.send(result)
+    })
+    // get a single discussion
+
     // users related endpoints
     app.post("/user", async (req, res) => {
       const userInfo = req.body;
